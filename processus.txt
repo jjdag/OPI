@@ -1,0 +1,50 @@
+OPI - TP3 - Jana DAGHER - 21314951
+
+
+
+Ex1)
+
+2. "ps -ax" ou "ps aux" avec a pour processes run by all other users as well as my own et u pour specify whih process is run by which user et x pour inclure ceux qui n'ont pas de controlling terminal
+
+3. "ps aux --sort -pcpu" pour trier dans l'ordre decroissant les processus selon le pourcentage de cpu consommé --> programme le plus consommateur est actuellement firefox par pltguest (11.1% de consommation cpu)
+
+4. "ps -C firefox" retourne les infos sur l'activation de la commande firefox (heure, ID, etc.) ce qui montre qu'il est en effet en marche, en contraste à par exemple "ps -C vivado" qui ne retourne rien, et donc n'est pas enclenché
+
+
+
+Ex2)
+
+1. "top -d 01.0" pour delay of 01.0 seconds
+
+2. "top" pour afficher PID de firefox puis "k" pour kill puis "15" pour le signal de termination du programme
+
+
+
+Ex3)
+
+"emacs &" puis "man gcc" puis ctrl z puis "info gcc" puis ctrl z puis "emacs" puis ctrl z puis "jobs > jobs.txt" (recopié ici)
+[1]   En cours d'exécution   emacs &
+[2]   Arrêté                man gcc
+[3]-  Arrêté                info gcc
+[4]+  Arrêté                emacs
+puis "emacs bg" puis ctrl z puis "fg man gcc" puis ctrl z puis "kill %2 %3"
+(verification en retappant jobs et n'ayant rien en retour)
+
+
+
+Ex4)
+
+1. "emacs" dans term1 puis "ps -C emacs" dans term2 qui donne :
+PID TTY          TIME CMD
+   7666 pts/0    00:00:00 emacs
+puis "killm -s SIGTSP 7666" dans term2 pour avoir en retour dans term1 :
+[1]+  Arrêté                emacs
+puis "fg emacs" et ctrl z dans term1 ce qui arrete emacs dans le term1 mais ne marcherait pas a partir du term2 --> ctrl z est local
+
+2. application avec gdb :
+"gdb" pour le lancer puis ctrl c a plusieurs reprises qui ne resussit pas a interrompre le programme
+ouverture d'un autre terminal et "ps -C gdb" pour avoir le pid 8132 du processus de gdb puis "kill -9 8132" pour tuer gdb ce qui marche (retourne : (gdb) Processus arrêté) dans le premier terminal
+
+Difference entre ctrl c et kill -9 est que ctrl c est une commande d'interruption qui peut etre ignorée par certains logiciels (dépendemment de comment ils sont programmés pour la traiter) mais kill est une instruction fatale de terminaison (sigkill) du processus, elle est immediatement executée sans etre d'abord gérée par le programme
+
+
