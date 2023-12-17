@@ -1,0 +1,77 @@
+|Synataxe fondamentale des makefile:
+|
+|target(cible): dependances/prerequis/composants
+|	commande(s)
+|
+|Macros (variables internes) utiles a connaitre:
+|$@ --> pointe vers la cible
+|$< --> premiere dependance associee a la cible
+|$^ --> liste de toutes les dependances
+
+
+# -------------------- creation de la librairie d'archive (dans lib)
+
+libsalutations.a: bonjour.o bonsoir.o bonnenuit.o
+ ar r libsalutations.a bonjour.o bonsoir.o bonnenuit.o
+ ranlib libsalutations.a # indexation, aussi faisable avec ar rcs
+
+# -------------------- compilation de l'exe salut en liaison avec la lib d'archive
+
+all: salut
+
+heure.o: heure.c heure.h
+ gcc -c -o heure.o heure.c
+
+salut.o: salut.c
+ gcc -c -o salut.o salut.c
+ 
+salut: salut.o
+ gcc -o salut salut.o heure.o -lsalutations -L../lib/ 
+
+# -------------------- autre maniere de compiler salut.o avec l'argument I precisant le path des fichiers entetes
+
+salut.o: salut.c # (dans src)
+ gcc -c -I../lib salut.c -o salut.o
+
+# -------------------- arbre de dependances pour salut
+
+          salut
+            |
+       ------------
+       |          |
+libsalutations   src/salut.o
+       |
+ ---------------------------
+ |            |            |
+bonjour.o  bonsoir.o  bonnenuit.o
+
+# -------------------- ajout de clean dans les makefile lib et src
+
+clean: # pour lib
+ rm -rf libsalutations.a
+
+clean: # pour src
+ rm -rf salut salut.o
+
+# -------------------- makefile recursif pour factoriser la compilation de la totalite du code dans salut-0.1
+
+BINDIR := ~/salut-0.1/ # binary directory, variable qui specifie dnas quel repertoire devrait avoir lieu l'installation et la compilation de l'executable final (hence bin)
+
+all: lib salut # mentionner tous les processus qui seront geres par ce makefile
+
+# pwd est salut-0.1, repertoire parent de lib et src
+lib:
+ cd lib && make
+
+salut:
+ cd src && make
+
+# [!] l'ordre compte --> setup de la librairie de dependances en premier, suivie de la compilation des .c
+
+clean: # invoquer les clean de chaque sous-dir
+ cd lib && make clean
+ cd src && make clean
+
+install:
+ cp ./src/salut $(BINDIR) # copier l'exe final salut dans le rep initialement defini pour l'installation
+                        # parentheses necessaires pour var BINDIR sinon erreur et l'indicateur de variable $ n'en prendra que la premiere letter ("B")

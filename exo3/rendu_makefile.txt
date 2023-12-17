@@ -1,0 +1,97 @@
+2) [voir pdf attache]
+
+3) Tous les fichiers qui entrent en jeu dans la construction
+de flappy devrait etre compiles (pourrait etre separement),
+puis lies (link) ensemble pour former l'executable final.
+Nous devrons donc compiler: main.c, flappy.c, cmd.c, functions.c, memomry.c, et pipe.c.
+
+4) [voir pdf attache]
+ 
+5) gcc -c flappy.c -o flappy.o
+gcc -c cmd.c -o cmd.o
+gcc -c functions.c -o functions.o
+gcc -c pipe.c -o pipe.o
+gcc -c memory.c -o memory.o
+gcc -c main.c -o main.o
+
+gcc flappy.o cmd.o memory.o functions.o pipe.o -o main
+
+7)
+CC = gcc
+CFLAGS = -std=c99
+
+BINDIR = /pltguest/OPI/exo3/bin/
+
+EXEC = $(BINDIR)/main
+
+all: $(EXEC)
+
+$(EXEC): *.o
+ $(CC) $(CFLAGS) $^ -o $@
+
+%.o: %.c %.h
+ $(CC) $(CFLAGS) -c $< -o $@
+
+# Mais il y a un probleme : pas tous les fichiers a compiler
+# n'ont que leur entete eponyme comme dependance
+# Et en ce qui concerne main, le fichier n'a meme pas de fichier
+# entete correspondant --> erreur
+# Il faudrait donc :
+# *soit coder la compilation de chaque .c manuellement avec
+#  ses .h correspondants (pas efficace)
+# *soit trouver une sorte de structure (dictionnaire, hash table, etc.)
+#  associative qui puisse lier chaque .c a ses .h respectifs de sorte
+#  a inclure chaque liste de dependances specifique a son fichier objet (mieux)
+# *soit trouver les commandes makefile qui permettraient la reconnaissance
+#  dynamique des .h pertinents a chaque .c en les extrayant directement de
+#  l'entete (mais sans pour autant inclure aussi les entetes de systeme
+#  (e.g. stdio.h, etc.) (meilleur)
+# Application de cette idee ci-dessous :
+
+SRC = functions.c cmd.c pipe.c memory.c flappy.c main.c
+
+# variable liste contenant tous les fichers sources a compiler
+
+# variables des flags et compilateur restent les memes
+
+%.d: %.c
+ $(CC) -MM $(CFLAGS) -o $@ $<
+
+# Premiere regle pour compiler les fichiers sources en
+# fichiers de dependances ".d" (+ "-MM" pour generer le debut d'une
+# regle qui consiste en "le nom du fichier a compiler.o: tous les
+# fichiers include trouves dans son entete (dependances)", mais
+# sans garder les entetes de systeme ni les entetes de leur fichier .h
+# non plus (source : https://gcc.gnu.org/onlinedocs/gcc/Preprocessor-Options.html)
+
+# Le passage a .d permet de creer des fichiers de dependances
+# plus efficaces dans le tracage des dependances pour chaque .c
+# (d'autant plus utile en cas de differents .h pour un meme fichier,
+# ou de mise a jour d'un certain .h dont l'update doit se refleter
+# dans le .o genere --> se reflete dans ce cas dans le .d concerne,
+# et la mise a jour de .o peut donc rester ponctuelle en ce qu'affecte
+# ce .d specifiquement, sans devoir recompiler l'entierete du fichier)
+
+include $(SRC: .c=.d) # parcours de chaque element de la liste de .c
+                      # sources pour reperer ses dependances et les convertir en .d
+
+%.o: %.c
+ $(CC) -c $(CFLAGS) -o $@ $(<: .d=.c)
+
+# Derniere regle qui contient tous les elements normaux d'une
+# compilation de .c en .o (variable du compilateur, des flags,
+# $@ pour designer la cible qui sera le output de la compilation, etc.)
+# MAIS les dependances sont ici decrites par $(<: .d=.c)
+# qui permet la saisie de la premiere ($<) dependance (prerequisite)
+# specifiee dans la regle (%.c) et son association aux fichiers
+# de dependance .d crees specifiquement pour le fichier source a
+# compiler reconvertis en fichiers .c (il s'agit juste d'un rechangement
+# d'extension pour avoir .c approprie aux commandes de
+# compilation normale
+
+clean:
+ rm -rf *.o $(EXEC)
+
+
+
+

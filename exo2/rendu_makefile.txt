@@ -1,0 +1,52 @@
+# -------------------- definition des variables usuelles
+
+CC = gcc # var du compilateur
+CFLAGS = -03 -Wall -funroll-loops -c -o # flag de compilation
+LDLIBS = -lpng # flag de liaison de librairies
+
+# -------------------- makefile de compilation de pbm2png et pbm2eps9 (suite apres la definition des var)
+
+all: pbm2png pbm2eps9
+
+pbm2eps9: pbm2eps9.o printer.o # citer les dependencies qui entreront en jeu dans l'exec de la commande
+ $(CC) $(CFLAGS) -o pbm2eps9 pbm2eps9.o printer.o
+# OU BIEN (avec var internes) $(CC) $(CFLAGS) -o target ($@) soit pbm2esp9 puis toues les dependances ($^) soient pbm2eps9.o et printer.o
+# donc $(CC) $(CFLAGS) -o $@ $^
+
+pbm2png: pbm2png.c
+ $(CC) $(CFLAGS) $(LDLIBS) -o pbm2png pbm2png.c
+# aussi $(CC) $(CFLAGS) $(LDLIBS) -o $@ $< (ou $@ $^ vu qu il n y a qu'une seule dependance dans tous les cas donc on peut soit la mentionner comme la premiere (et seule) soit les lister toutes donc uniquement elle
+# (ou $* $< (fichier cible sans extension (meme s'il n'en a deja pas)
+
+printer.o: printer.c
+ $(CC) $(CFLAGS) -o printer.o printer.c
+# $(CC) $(CFLAGS) -o $@ $<
+
+# regle generalisee (pattern rule) suivie des dependances qui l'emploieraient
+%.o: %.c
+ $(CC) $(CFLAGS) -o $@ $^
+pbm2png: pbm2png.c
+pbm2eps9.o: pbm2eps9.c printer.h
+printer.o: printer.c printer.h
+
+# [!] pattern rule se base sur l'emploi de % dans les regles utilisees recurremment comme motifs
+# il peut s'agir de tout genre de regle
+# un autre genre de rules (regles de suffixes i.e. suffix rules) concernerait uniquement les regles dont l'objet est de modifier l'extension de la cible (cible prendrait necessairement le format .ext_init.ext_voulue)
+
+clean:
+ rm -rf pbm2png pbm2eps9 *.o # * comme placeholder/wildcard/joker
+# les deux exec et tous les fichiers objets intermediaires
+
+# -------------------- install
+
+DIR = /pltguest/Bureau/TP4/exo2/bin
+install:
+ mkdir DIR
+ cp pbm2png pbm2eps9 DIR # copie des executables dans le repertoire bin 
+
+# ou aussi (avec des alias de ligne de commande au lieu de variables usuelles (moins bien)) 
+install:
+ alias DIR = "/pltguest/Bureau/TP4/exo2/"
+ cd DIR
+ mkdir ./bin/
+ cp pbm2png pbm2eps9 ./bin/
